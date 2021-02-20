@@ -2,8 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'contacts.dart';
 
+/*
+make icons into links
+delete functionality
+ */
+
 class NewContactPage extends StatelessWidget {
-  ContactsPageState parent;
+  final ContactsPageState parent;
   NewContactPage(this.parent);
 
   @override
@@ -18,7 +23,7 @@ class NewContactPage extends StatelessWidget {
 }
 
 class NewContactForm extends StatefulWidget {
-  ContactsPageState parent;
+  final ContactsPageState parent;
   NewContactForm(this.parent);
 
   @override
@@ -26,14 +31,16 @@ class NewContactForm extends StatefulWidget {
 }
 
 class _NewContactFormState extends State<NewContactForm> {
-  final myController = TextEditingController();
+  final nameController = TextEditingController();
+  final contactFreqController = TextEditingController();
   ContactsPageState parent;
   _NewContactFormState(this.parent);
 
   @override
   void dispose() {
-    // Clean up the controller when the widget is disposed.
-    myController.dispose();
+    // Clean up the controllers when the widget is disposed.
+    nameController.dispose();
+    contactFreqController.dispose();
     super.dispose();
   }
 
@@ -42,15 +49,33 @@ class _NewContactFormState extends State<NewContactForm> {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: TextField(
-          controller: myController,
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          parent.addContact(myController.text);
-        },
-        child: Icon(Icons.text_fields),
+        child: Column(
+          children: [
+            SizedBox(height: 50),
+            TextFormField(
+              decoration: InputDecoration(
+                  labelText: 'Name'
+              ),
+              controller: nameController,
+            ),
+            SizedBox(height: 50),
+            Text(
+              'How many times per week would you like to contact them?',
+              style: TextStyle(fontSize: 24),
+            ),
+            TextFormField(
+              controller: contactFreqController,
+            ),
+            SizedBox(height: 50),
+            TextButton(
+              child: Text(
+                'Save',
+                style: TextStyle(fontSize: 24),
+              ),
+              onPressed: () { parent.addContact(nameController.text); },
+            )
+          ]
+        )
       ),
     );
   }

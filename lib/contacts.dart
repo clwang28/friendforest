@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'new-contact.dart';
+import 'calendar.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -13,10 +14,14 @@ class ContactsPage extends StatefulWidget {
 }
 
 class ContactsPageState extends State<ContactsPage> {
-  List _contacts = [];
+  List _contacts = ['Jennya', 'Claire', 'Vrushali', 'Nivashini'];
 
   void addContact(String name) {
     setState(() {_contacts.add(name);});
+  }
+
+  List<String> getContactNames() {
+    return List.from(_contacts);
   }
 
   @override
@@ -33,6 +38,12 @@ class ContactsPageState extends State<ContactsPage> {
         persistentFooterButtons: [
           IconButton(
             icon: Icon(Icons.calendar_today),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MyApp()),
+              );
+            }
           ),
           IconButton(
               icon: Icon(Icons.add),
