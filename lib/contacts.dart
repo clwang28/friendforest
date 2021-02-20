@@ -1,92 +1,61 @@
 import 'package:flutter/material.dart';
-import 'add-contact.dart';
+import 'new-contact.dart';
 
 void main() {
-  runApp(ContactsPage());
+  runApp(MaterialApp(
+    home: ContactsPage(),
+  ));
 }
 
 class ContactsPage extends StatefulWidget {
   @override
-  _ContactsPageState createState() => _ContactsPageState();
+  ContactsPageState createState() => ContactsPageState();
 }
 
-class _ContactsPageState extends State<ContactsPage> {
-  int _selectedIndex = 0;
-  static List _pages = <Widget>[
-    ContactsGrid(),
-    AddContactForm()
-  ];
+class ContactsPageState extends State<ContactsPage> {
+  List _contacts = [];
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  void addContact(String name) {
+    setState(() {_contacts.add(name);});
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final title = 'Contacts';
-
-    return MaterialApp(
-      title: title,
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text(title),
-        ),
-        body: Center(
-          child: _pages.elementAt(_selectedIndex),
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today),
-              label: 'Calendar',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add),
-              label: 'Add Friend',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-        ),
-      ),
-    );
-  }
-}
-
-class ContactsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GridView.count(
-        // Create a grid with 2 columns. If you change the scrollDirection to
-        // horizontal, this produces 2 rows.
-        crossAxisCount: 2,
-        // Generate 100 widgets that display their index in the List.
-        children: <Widget>[
-          GridTile(
-              child: Icon(Icons.face),
-              footer: Text('Jennya',
-                  textAlign: TextAlign.center)
+        appBar: AppBar(
+          title: Text('Contacts'),
+        ),
+        body: GridView.count(
+          // Create a grid with 2 columns
+          crossAxisCount: 2,
+          children: makeContactTiles(),
+        ),
+        persistentFooterButtons: [
+          IconButton(
+            icon: Icon(Icons.calendar_today),
           ),
-          GridTile(
-              child: Icon(Icons.face),
-              footer: Text('Claire',
-                  textAlign: TextAlign.center)
-          ),
-          GridTile(
-              child: Icon(Icons.face),
-              footer: Text('Vrushali',
-                  textAlign: TextAlign.center)
-          ),
-          GridTile(
-              child: Icon(Icons.face),
-              footer: Text('Nivashini',
-                  textAlign: TextAlign.center)
+          IconButton(
+              icon: Icon(Icons.add),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => NewContactPage(this)),
+                );
+              }
           ),
         ],
-      ),
     );
+  }
+
+  List<GridTile> makeContactTiles() {
+    List<GridTile> contactTiles = [];
+    for (String contact in _contacts) {
+      contactTiles.add(GridTile(
+          child: Icon(Icons.face),
+          footer: Text(contact,
+              textAlign: TextAlign.center)
+      ));
+    }
+    return contactTiles;
   }
 }
