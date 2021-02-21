@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hbp_app/one-to-one-page.dart';
 import 'new-contact.dart';
 import 'calendar.dart';
 
@@ -14,14 +15,29 @@ class ContactsPage extends StatefulWidget {
 }
 
 class ContactsPageState extends State<ContactsPage> {
-  List _contacts = ['Jennya', 'Claire', 'Vrushali', 'Nivashini'];
+  var _contacts = <String, String>{
+    'Jennya': '1',
+    'Claire': '2',
+    'Vrushali': '3',
+    'Nivashini': '4'
+  };
 
-  void addContact(String name) {
-    setState(() {_contacts.add(name);});
+  void addContact(String name, String meetingFreq) {
+    setState(() {_contacts.putIfAbsent(name, () => meetingFreq); });
+  }
+
+  void updateMeetingFreq(String name, String newMeetingFreq) {
+    setState(() {
+      _contacts[name] = newMeetingFreq;
+    });
+  }
+
+  void deleteContact(String nameToRemove) {
+    setState(() { _contacts.removeWhere((name, meetingFreq) => name == nameToRemove); });
   }
 
   List<String> getContactNames() {
-    return List.from(_contacts);
+    return List.from(_contacts.keys);
   }
 
   @override
@@ -31,7 +47,6 @@ class ContactsPageState extends State<ContactsPage> {
           title: Text('Contacts'),
         ),
         body: GridView.count(
-          // Create a grid with 2 columns
           crossAxisCount: 2,
           children: makeContactTiles(),
         ),
@@ -58,15 +73,22 @@ class ContactsPageState extends State<ContactsPage> {
     );
   }
 
-  List<GridTile> makeContactTiles() {
-    List<GridTile> contactTiles = [];
-    for (String contact in _contacts) {
-      contactTiles.add(GridTile(
-          child: Icon(Icons.face),
-          footer: Text(contact,
-              textAlign: TextAlign.center)
-      ));
-    }
+  List<Widget> makeContactTiles() {
+    List<Widget> contactTiles = [];
+    _contacts.forEach((name, meetingFreq) => {
+      contactTiles.add(GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context)
+          => OneToOnePage(this, name, meetingFreq)),
+            );
+          },
+          child: GridTile(
+            child: Icon(Icons.face),
+            footer: Text(name,
+                textAlign: TextAlign.center)
+      )))});
     return contactTiles;
   }
 }

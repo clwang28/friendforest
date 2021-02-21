@@ -2,11 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'contacts.dart';
 
-/*
-make icons into links
-delete functionality
- */
-
 class NewContactPage extends StatelessWidget {
   final ContactsPageState parent;
   NewContactPage(this.parent);
@@ -32,20 +27,20 @@ class NewContactForm extends StatefulWidget {
 
 class _NewContactFormState extends State<NewContactForm> {
   final nameController = TextEditingController();
-  final contactFreqController = TextEditingController();
+  String dropdownValue;
+
   ContactsPageState parent;
   _NewContactFormState(this.parent);
 
   @override
   void dispose() {
-    // Clean up the controllers when the widget is disposed.
     nameController.dispose();
-    contactFreqController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -63,16 +58,27 @@ class _NewContactFormState extends State<NewContactForm> {
               'How many times per week would you like to contact them?',
               style: TextStyle(fontSize: 24),
             ),
-            TextFormField(
-              controller: contactFreqController,
-            ),
+          DropdownButton<String>(
+            value: dropdownValue,
+            icon: Icon(Icons.arrow_downward),
+            onChanged: (String newValue) {
+              setState(() { dropdownValue = newValue; });
+            },
+            items: <String>['1', '2', '3', '4', '5', '6', '7']
+                .map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+          ),
             SizedBox(height: 50),
-            TextButton(
+            OutlinedButton(
               child: Text(
                 'Save',
                 style: TextStyle(fontSize: 24),
               ),
-              onPressed: () { parent.addContact(nameController.text); },
+              onPressed: () { parent.addContact(nameController.text, dropdownValue); },
             )
           ]
         )
