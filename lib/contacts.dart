@@ -33,7 +33,7 @@ class ContactsPageState extends State<ContactsPage> {
         body: GridView.count(
           // Create a grid with 2 columns
           crossAxisCount: 2,
-          children: makeContactTiles(),
+          children: makeContactTiles()
         ),
         persistentFooterButtons: [
           IconButton(
