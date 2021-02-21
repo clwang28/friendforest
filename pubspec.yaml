@@ -49,7 +49,7 @@ flutter:
   fonts:
     - family: Avenir
       fonts:
-        - asset: fonts/TTNorms-Regular.otf
+        - asset: fonts/AvenirLTStd-Book.otf
 
   # To add assets to your application, add an assets section, like this:
   # assets:
