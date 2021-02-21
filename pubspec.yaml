@@ -31,6 +31,7 @@ dependencies:
   convert: ^2.1.1
   flutter_time_picker_spinner: ^1.0.6+1
   flutter_local_notifications: ^4.0.1
+  imagebutton: ^0.0.6
 
 
 dev_dependencies:
@@ -43,7 +44,22 @@ dev_dependencies:
 # The following section is specific to Flutter.
 flutter:
   assets:
-    - assets/images/happynature.jpg
+    - assets/images/0.png
+    - assets/images/1.png
+    - assets/images/2.png
+    - assets/images/3.png
+    - assets/images/claire.png
+    - assets/images/icon.png
+    - assets/images/icon1.png
+    - assets/images/icon2.png
+    - assets/images/icon3.png
+    - assets/images/icon4.png
+    - assets/images/icon5.png
+    - assets/images/jennya.png
+    - assets/images/nivashini.png
+    - assets/images/vrushali.png
+
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -52,7 +68,7 @@ flutter:
   fonts:
     - family: Avenir
       fonts:
-        - asset: fonts/AvenirLTStd-Book.otf
+        - asset: assets/fonts/AvenirLTStd-Book.otf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -78,8 +78,9 @@ class _NewContactFormState extends State<NewContactForm> {
                 'Save',
                 style: TextStyle(fontSize: 24),
               ),
-              onPressed: () { parent.addContact(nameController.text, dropdownValue); },
-            )
+              onPressed: () {
+                parent.addContact(nameController.text, dropdownValue);
+              })
           ]
         )
       ),

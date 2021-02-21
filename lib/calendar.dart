@@ -21,6 +21,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Calendar',
       home: MyHomePage(title: 'Calendar'),
+      theme: ThemeData(
+        primaryColor: Colors.lightGreen[400],
+        accentColor: Colors.blue[200],
+        fontFamily: 'Avenir'
+      )
     );
   }
 }
@@ -29,33 +34,44 @@ class EventInfo {
   String eventDesc;
   DateTime eventTime;
   String friend;
+  bool isCompleted;
 
   EventInfo(String eventDesc, DateTime eventTime, String friend) {
     this.eventDesc = eventDesc;
     this.eventTime = eventTime;
     this.friend = friend;
+    this.isCompleted = false;
   }
 
   @override
   bool operator ==(Object other) => other is EventInfo
       && other.eventDesc == eventDesc
       && other.eventTime == eventTime
-      && other.friend == friend;
+      && other.friend == friend
+      && other.isCompleted == isCompleted;
 
   @override
-  int get hashCode => eventDesc.hashCode + eventTime.hashCode + friend.hashCode;
+  int get hashCode => eventDesc.hashCode + eventTime.hashCode + friend.hashCode + isCompleted.hashCode;
 
 
   String getEventDesc() {
     return eventDesc;
   }
 
-  String getEventTime() {
-    return _MyHomePageState.dateTimeFormatting(eventTime);
+  DateTime getEventTime() {
+    return eventTime;
   }
 
   String getFriend() {
     return friend;
+  }
+
+  bool getIsCompleted() {
+    return isCompleted;
+  }
+
+  void toggleIsCompleted() {
+    isCompleted = !isCompleted;
   }
 }
 
@@ -74,7 +90,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   List _selectedEvents;
   TextEditingController _eventController;
   SharedPreferences prefs;
-  AnimationController _animationController;
+
   CalendarController _calendarController;
   String _dropdownValue;
   List<String> _friendsList  = new ContactsPageState().getContactNames();
@@ -117,7 +133,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _animationController.dispose();
     _calendarController.dispose();
     super.dispose();
   }
@@ -338,9 +353,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 _selectedEvents.removeAt(index);
               });
             },
+              child: GestureDetector (
+                onDoubleTap: () {
+                  _eventHashes[_selectedEvents[index]].toggleIsCompleted();
+                },
             child: Container(
               height: 80.0,
-              decoration: BoxDecoration(border: Border.all(width: 1.0)),
+              decoration: BoxDecoration(border: Border.all(width: 1.0),
+                  color:
+                  (_eventHashes[_selectedEvents[index]].getIsCompleted() && DateTime.now().difference(_eventHashes[_selectedEvents[index]].getEventTime()).inHours <= 0) ? Colors.lightGreen[200] :
+                   (!_eventHashes[_selectedEvents[index]].getIsCompleted() && DateTime.now().difference(_eventHashes[_selectedEvents[index]].getEventTime()).inHours <= 0) ? Colors.red[200] :
+                    Colors.white),
               padding: EdgeInsets.all(5.0),
               alignment: Alignment.centerLeft,
               child: Row(
@@ -359,7 +382,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   Container(alignment: Alignment.centerRight,
                   width: 190,
                   child: Text(
-                      _eventHashes[_selectedEvents[index]].getEventTime() + "\n" + _eventHashes[_selectedEvents[index]].getFriend(),
+                      dateTimeFormatting(_eventHashes[_selectedEvents[index]].getEventTime()) + "\n" + _eventHashes[_selectedEvents[index]].getFriend(),
                       style: TextStyle(
                           color: Colors.green,
                           fontSize: 15.0,
@@ -371,6 +394,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 ]
               )
             )
+              )
           );
         }
       )
