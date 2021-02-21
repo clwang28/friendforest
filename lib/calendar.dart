@@ -1,11 +1,15 @@
 import 'dart:convert';
+import 'contacts.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:hbp_app/contacts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
+
+
 
 void main() {
   initializeDateFormatting().then((_) => runApp(MyApp()));
@@ -72,19 +76,20 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   SharedPreferences prefs;
   AnimationController _animationController;
   CalendarController _calendarController;
-  List<String> _friendsList  = <String>["Jennya", "Claire", "Vrushali", "Nivashini"];
-  String dropdownValue = 'Jennya';
+  String _dropdownValue;
+  List<String> _friendsList  = new ContactsPageState().getContactNames();
   DateTime _dateTime = DateTime.now();
 
   @override
   void initState() {
-    super.initState();
     _events = {};
     _eventHashes = {};
     _selectedEvents = [];
     _eventController = TextEditingController();
     _calendarController = CalendarController();
+    _dropdownValue = _friendsList.first;
     initPrefs();
+    super.initState();
   }
 
   initPrefs() async {
@@ -124,16 +129,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     });
   }
 
-  void _onVisibleDaysChanged(
-      DateTime first, DateTime last, CalendarFormat format) {
-    print('CALLBACK: _onVisibleDaysChanged');
-  }
-
-  void _onCalendarCreated(
-      DateTime first, DateTime last, CalendarFormat format) {
-    print('CALLBACK: _onCalendarCreated');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,10 +138,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       body: Column(
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
-          // Switch out 2 lines below to play with TableCalendar's settings
-          //-----------------------
           _buildTableCalendar(),
-          // _buildTableCalendarWithBuilders(),
           const SizedBox(height: 8.0),
           _buildButtons(),
           const SizedBox(height: 8.0),
@@ -157,26 +149,41 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         child: Icon(Icons.add),
         onPressed: _showAddDialog,
       ),
+      persistentFooterButtons: [
+        IconButton(
+            icon: Icon(Icons.contacts),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ContactsPage()),
+              );
+            }
+        )
+      ],
     );
   }
 
   _showAddDialog() {
+    final dropdownMenuOptions = _friendsList.map((String item) => new DropdownMenuItem<String>(
+      value: item, child: Text(item)
+    )).toList();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         content: TextField(
           controller: _eventController,
+          maxLength: 20,
         ),
         actions: <Widget>[
           TimePickerSpinner(
             is24HourMode: false,
             normalTextStyle: TextStyle(
               fontSize: 24,
-              color: Colors.lightGreen
+              color: Colors.green[200],
             ),
             highlightedTextStyle: TextStyle(
               fontSize: 24,
-              color: Colors.green
+              color: Colors.green[900]
             ),
             spacing: 50,
             itemHeight: 80,
@@ -188,41 +195,35 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               });
             },
           ),
-          DropdownButton<String>(
-            value: dropdownValue,
-            icon: Icon(Icons.arrow_drop_down),
-            iconSize: 24,
-            elevation: 16,
-            style: TextStyle(color: Colors.black),
-            underline: Container(
-              height: 2,
-              color: Colors.black,
+          new DropdownButton<String>(
+              value: _dropdownValue,
+                items: dropdownMenuOptions,
+              icon: Icon(Icons.arrow_drop_down),
+                iconSize: 24,
+                elevation: 16,
+                style: TextStyle(color: Colors.black, fontFamily: 'Avenir'),
+                underline: Container(
+                  height: 2,
+                  color: Colors.black,
+                ),
+                onChanged: (s) {
+                  setState(() {
+                    _dropdownValue = s;
+                  });
+                },
             ),
-            onChanged: (String newValue) {
-              setState(() {
-                dropdownValue = newValue;
-              });
-            },
-            items: _friendsList
-                .map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList()
-          ),
           TextButton(
             child: Text("Save"),
             onPressed: () {
               if (_eventController.text.isEmpty) return;
               setState(() {
                 if (_events[_calendarController.selectedDay] != null) {
-                  EventInfo e = new EventInfo(_eventController.text, _dateTime, dropdownValue);
+                  EventInfo e = new EventInfo(_eventController.text, _dateTime, _dropdownValue);
                   _events[_calendarController.selectedDay].add(e.hashCode.toString());
                   _eventHashes[e.hashCode.toString()] = e;
                 }
                 else {
-                  EventInfo e = new EventInfo(_eventController.text, _dateTime, dropdownValue);
+                  EventInfo e = new EventInfo(_eventController.text, _dateTime, _dropdownValue);
                   _events[_calendarController.selectedDay] = [e.hashCode.toString()];
                   _eventHashes[e.hashCode.toString()] = e;
                 }
@@ -278,49 +279,27 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       events: _events,
       startingDayOfWeek: StartingDayOfWeek.sunday,
       calendarStyle: CalendarStyle(
-        selectedColor: Colors.deepOrange[400],
-        todayColor: Colors.deepOrange[200],
+        selectedColor: Colors.lightGreen[400],
+        todayColor: Colors.lightGreen[200],
         markersColor: Colors.brown[700],
         outsideDaysVisible: true,
+        outsideStyle: TextStyle(fontSize: 18, fontFamily: 'Avenir', color: Colors.grey),
+        eventDayStyle: TextStyle(fontSize: 18, fontFamily: 'Avenir'),
+        selectedStyle: TextStyle(fontSize: 18, fontFamily: 'Avenir', color: Colors.white),
+          weekdayStyle: TextStyle(fontSize: 18, fontFamily: 'Avenir'),
+          todayStyle: TextStyle(fontSize: 18, fontFamily: 'Avenir'),
+        weekendStyle: TextStyle(color: Colors.blue[800], fontSize: 18, fontFamily: 'Avenir'),
+        outsideWeekendStyle: TextStyle(color: Colors.blue[200], fontSize: 18, fontFamily: 'Avenir')
+      ),
+      daysOfWeekStyle: DaysOfWeekStyle(
+        weekdayStyle: TextStyle(fontSize: 18, fontFamily: 'Avenir'),
+        weekendStyle: TextStyle(color: Colors.blue[800], fontSize: 18, fontFamily: 'Avenir')
       ),
       headerStyle: HeaderStyle(
-        formatButtonVisible: false),
+        formatButtonVisible: false,
+      centerHeaderTitle: true,
+      titleTextStyle: TextStyle(fontSize: 25, fontFamily: 'Avenir', fontWeight: FontWeight.bold)),
       onDaySelected: _onDaySelected,
-      onVisibleDaysChanged: _onVisibleDaysChanged,
-      onCalendarCreated: _onCalendarCreated,
-    );
-  }
-
-  Widget _buildEventsMarker(DateTime date, List events) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      decoration: BoxDecoration(
-        shape: BoxShape.rectangle,
-        color: _calendarController.isSelected(date)
-            ? Colors.brown[500]
-            : _calendarController.isToday(date)
-            ? Colors.brown[300]
-            : Colors.blue[400],
-      ),
-      width: 16.0,
-      height: 16.0,
-      child: Center(
-        child: Text(
-          '${events.length}',
-          style: TextStyle().copyWith(
-            color: Colors.white,
-            fontSize: 12.0,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHolidaysMarker() {
-    return Icon(
-      Icons.add_box,
-      size: 20.0,
-      color: Colors.blueGrey[800],
     );
   }
 
@@ -363,29 +342,32 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               height: 80.0,
               decoration: BoxDecoration(border: Border.all(width: 1.0)),
               padding: EdgeInsets.all(5.0),
+              alignment: Alignment.centerLeft,
               child: Row(
                 children: <Widget>[
-                  Text(
+                  Container(alignment: Alignment.centerLeft,
+                  width: 190,
+                  child: Text(
                     _eventHashes[_selectedEvents[index]].getEventDesc(),
+                    textAlign: TextAlign.left,
                     style: TextStyle(
                       color: Colors.black,
-                      fontSize: 20.0
-                    )
-                  ),
-                  Text(
-                    _eventHashes[_selectedEvents[index]].getEventTime(),
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontSize: 15.0
-                    )
-                  ),
-                  Text(
-                    _eventHashes[_selectedEvents[index]].getFriend(),
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontSize: 15.0
-                    )
-                  )
+                      fontSize: 20.0,
+                      fontFamily: 'Avenir',
+                    ),
+                  )),
+                  Container(alignment: Alignment.centerRight,
+                  width: 190,
+                  child: Text(
+                      _eventHashes[_selectedEvents[index]].getEventTime() + "\n" + _eventHashes[_selectedEvents[index]].getFriend(),
+                      style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 15.0,
+                        fontFamily: 'Avenir'
+                      ),
+                      textAlign: TextAlign.right,
+                    ))
+
                 ]
               )
             )

@@ -32,6 +32,7 @@ dependencies:
   flutter_time_picker_spinner: ^1.0.6+1
   flutter_local_notifications: ^4.0.1
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -48,6 +49,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  fonts:
+    - family: Avenir
+      fonts:
+        - asset: fonts/TTNorms-Regular.otf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -48,7 +48,7 @@ class ContactsPageState extends State<ContactsPage> {
         ),
         body: GridView.count(
           crossAxisCount: 2,
-          children: makeContactTiles(),
+          children: makeContactTiles()
         ),
         persistentFooterButtons: [
           IconButton(
