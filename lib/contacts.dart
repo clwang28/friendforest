@@ -1,67 +1,72 @@
 import 'package:flutter/material.dart';
+import 'new-contact.dart';
+import 'calendar.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(MaterialApp(
+    home: ContactsPage(),
+  ));
 }
 
-class MyApp extends StatelessWidget {
+class ContactsPage extends StatefulWidget {
+  @override
+  ContactsPageState createState() => ContactsPageState();
+}
+
+class ContactsPageState extends State<ContactsPage> {
+  List _contacts = ['Jennya', 'Claire', 'Vrushali', 'Nivashini'];
+
+  void addContact(String name) {
+    setState(() {_contacts.add(name);});
+  }
+
+  List<String> getContactNames() {
+    return List.from(_contacts);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final title = 'Friends';
-
-    return MaterialApp(
-      title: title,
-      home: Scaffold(
+    return Scaffold(
         appBar: AppBar(
-          title: Text(title),
+          title: Text('Contacts'),
         ),
         body: GridView.count(
-          // Create a grid with 2 columns. If you change the scrollDirection to
-          // horizontal, this produces 2 rows.
+          // Create a grid with 2 columns
           crossAxisCount: 2,
-          // Generate 100 widgets that display their index in the List.
-          children: <Widget>[
-            GridTile(
-              child: Icon(Icons.face),
-                footer: Text('Jennya',
-                  textAlign: TextAlign.center)
-            ),
-            GridTile(
-                child: Icon(Icons.face),
-                footer: Text('Claire',
-                    textAlign: TextAlign.center)
-            ),
-            GridTile(
-                child: Icon(Icons.face),
-                footer: Text('Vrushali',
-                    textAlign: TextAlign.center)
-            ),
-            GridTile(
-                child: Icon(Icons.face),
-                footer: Text('Nivashini',
-                    textAlign: TextAlign.center)
-            ),
-          ],
+          children: makeContactTiles(),
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
+        persistentFooterButtons: [
+          IconButton(
+            icon: Icon(Icons.calendar_today),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MyApp()),
+              );
+            }
+          ),
+          IconButton(
               icon: Icon(Icons.add),
-              label: 'Add Friend',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today),
-              label: 'Calendar',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: 'Settings',
-            ),
-          ],
-          // currentIndex: _selectedIndex,
-          // onTap: _onItemTapped,
-        ),
-      ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => NewContactPage(this)),
+                );
+              }
+          ),
+        ],
     );
+  }
+
+  List<GridTile> makeContactTiles() {
+    List<GridTile> contactTiles = [];
+    for (String contact in _contacts) {
+      contactTiles.add(GridTile(
+          child: Icon(Icons.face),
+          footer: Text(contact,
+              textAlign: TextAlign.center)
+      ));
+    }
+    return contactTiles;
   }
 }
