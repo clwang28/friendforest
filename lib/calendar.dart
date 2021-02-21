@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
 
 void main() {
   initializeDateFormatting().then((_) => runApp(MyApp()));
@@ -14,8 +16,42 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Calendar',
-      home: MyHomePage(title: 'Table Calendar Demo'),
+      home: MyHomePage(title: 'Calendar'),
     );
+  }
+}
+
+class EventInfo {
+  String eventDesc;
+  DateTime eventTime;
+  String friend;
+
+  EventInfo(String eventDesc, DateTime eventTime, String friend) {
+    this.eventDesc = eventDesc;
+    this.eventTime = eventTime;
+    this.friend = friend;
+  }
+
+  @override
+  bool operator ==(Object other) => other is EventInfo
+      && other.eventDesc == eventDesc
+      && other.eventTime == eventTime
+      && other.friend == friend;
+
+  @override
+  int get hashCode => eventDesc.hashCode + eventTime.hashCode + friend.hashCode;
+
+
+  String getEventDesc() {
+    return eventDesc;
+  }
+
+  String getEventTime() {
+    return _MyHomePageState.dateTimeFormatting(eventTime);
+  }
+
+  String getFriend() {
+    return friend;
   }
 }
 
@@ -30,16 +66,21 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Map<DateTime, List<dynamic>> _events;
+  Map<String, EventInfo>_eventHashes;
   List _selectedEvents;
   TextEditingController _eventController;
   SharedPreferences prefs;
   AnimationController _animationController;
   CalendarController _calendarController;
+  List<String> _friendsList  = <String>["Jennya", "Claire", "Vrushali", "Nivashini"];
+  String dropdownValue = 'Jennya';
+  DateTime _dateTime = DateTime.now();
 
   @override
   void initState() {
     super.initState();
     _events = {};
+    _eventHashes = {};
     _selectedEvents = [];
     _eventController = TextEditingController();
     _calendarController = CalendarController();
@@ -109,7 +150,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           const SizedBox(height: 8.0),
           _buildButtons(),
           const SizedBox(height: 8.0),
-          Expanded(child: _buildEventList()),
+          Expanded(child: _buildEventList(context)),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -127,16 +168,63 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           controller: _eventController,
         ),
         actions: <Widget>[
+          TimePickerSpinner(
+            is24HourMode: false,
+            normalTextStyle: TextStyle(
+              fontSize: 24,
+              color: Colors.lightGreen
+            ),
+            highlightedTextStyle: TextStyle(
+              fontSize: 24,
+              color: Colors.green
+            ),
+            spacing: 50,
+            itemHeight: 80,
+            minutesInterval: 15,
+            isForce2Digits: true,
+            onTimeChange: (time) {
+              setState(() {
+                _dateTime = time;
+              });
+            },
+          ),
+          DropdownButton<String>(
+            value: dropdownValue,
+            icon: Icon(Icons.arrow_drop_down),
+            iconSize: 24,
+            elevation: 16,
+            style: TextStyle(color: Colors.black),
+            underline: Container(
+              height: 2,
+              color: Colors.black,
+            ),
+            onChanged: (String newValue) {
+              setState(() {
+                dropdownValue = newValue;
+              });
+            },
+            items: _friendsList
+                .map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList()
+          ),
           TextButton(
             child: Text("Save"),
             onPressed: () {
               if (_eventController.text.isEmpty) return;
               setState(() {
                 if (_events[_calendarController.selectedDay] != null) {
-                  _events[_calendarController.selectedDay].add(_eventController.text);
+                  EventInfo e = new EventInfo(_eventController.text, _dateTime, dropdownValue);
+                  _events[_calendarController.selectedDay].add(e.hashCode.toString());
+                  _eventHashes[e.hashCode.toString()] = e;
                 }
                 else {
-                  _events[_calendarController.selectedDay] = [_eventController.text];
+                  EventInfo e = new EventInfo(_eventController.text, _dateTime, dropdownValue);
+                  _events[_calendarController.selectedDay] = [e.hashCode.toString()];
+                  _eventHashes[e.hashCode.toString()] = e;
                 }
                 prefs.setString("events", json.encode(encodeMap(_events)));
                 _eventController.clear();
@@ -147,6 +235,40 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         ],
       )
     );
+  }
+
+  static String dateTimeFormatting(DateTime dt) {
+    String amOrPm;
+    int h;
+    String m;
+
+    if (dt.hour == 12) {
+      h = dt.hour;
+      amOrPm = "pm";
+    }
+    else if (dt.hour > 12) {
+      h = dt.hour % 12;
+      amOrPm = "pm";
+    }
+    else if (dt.hour == 0) {
+      h = 12;
+      amOrPm = "am";
+    }
+    else {
+      h = dt.hour;
+      amOrPm = "am";
+    }
+
+    if (dt.minute < 10) {
+      m = "0" + dt.minute.toString();
+    }
+    else {
+      m = dt.minute.toString();
+    }
+
+    String thing = h.toString() + ":" + m + amOrPm;
+
+    return thing;
   }
 
   // Simple TableCalendar configuration (using Styles)
@@ -164,96 +286,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       headerStyle: HeaderStyle(
         formatButtonVisible: false),
       onDaySelected: _onDaySelected,
-      onVisibleDaysChanged: _onVisibleDaysChanged,
-      onCalendarCreated: _onCalendarCreated,
-    );
-  }
-
-  // More advanced TableCalendar configuration (using Builders & Styles)
-  Widget _buildTableCalendarWithBuilders() {
-    return TableCalendar(
-      locale: 'pl_PL',
-      calendarController: _calendarController,
-      events: _events,
-      initialCalendarFormat: CalendarFormat.month,
-      formatAnimation: FormatAnimation.slide,
-      startingDayOfWeek: StartingDayOfWeek.sunday,
-      availableGestures: AvailableGestures.all,
-      availableCalendarFormats: const {
-        CalendarFormat.month: '',
-      },
-      calendarStyle: CalendarStyle(
-        outsideDaysVisible: false,
-        weekendStyle: TextStyle().copyWith(color: Colors.blue[800]),
-        holidayStyle: TextStyle().copyWith(color: Colors.blue[800]),
-      ),
-      daysOfWeekStyle: DaysOfWeekStyle(
-        weekendStyle: TextStyle().copyWith(color: Colors.blue[600]),
-      ),
-      headerStyle: HeaderStyle(
-        centerHeaderTitle: true,
-        formatButtonVisible: false,
-      ),
-      builders: CalendarBuilders(
-        selectedDayBuilder: (context, date, _) {
-          return FadeTransition(
-            opacity: Tween(begin: 0.0, end: 1.0).animate(_animationController),
-            child: Container(
-              margin: const EdgeInsets.all(4.0),
-              padding: const EdgeInsets.only(top: 5.0, left: 6.0),
-              color: Colors.deepOrange[300],
-              width: 100,
-              height: 100,
-              child: Text(
-                '${date.day}',
-                style: TextStyle().copyWith(fontSize: 16.0),
-              ),
-            ),
-          );
-        },
-        todayDayBuilder: (context, date, _) {
-          return Container(
-            margin: const EdgeInsets.all(4.0),
-            padding: const EdgeInsets.only(top: 5.0, left: 6.0),
-            color: Colors.amber[400],
-            width: 100,
-            height: 100,
-            child: Text(
-              '${date.day}',
-              style: TextStyle().copyWith(fontSize: 16.0),
-            ),
-          );
-        },
-        markersBuilder: (context, date, events, holidays) {
-          final children = <Widget>[];
-
-          if (events.isNotEmpty) {
-            children.add(
-              Positioned(
-                right: 1,
-                bottom: 1,
-                child: _buildEventsMarker(date, events),
-              ),
-            );
-          }
-
-          if (holidays.isNotEmpty) {
-            children.add(
-              Positioned(
-                right: -2,
-                top: -2,
-                child: _buildHolidaysMarker(),
-              ),
-            );
-          }
-
-          return children;
-        },
-      ),
-      onDaySelected: (date, events, holidays) {
-        _onDaySelected(date, events, holidays);
-        _animationController.forward(from: 0.0);
-      },
       onVisibleDaysChanged: _onVisibleDaysChanged,
       onCalendarCreated: _onCalendarCreated,
     );
@@ -306,22 +338,60 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildEventList() {
-    return ListView(
-      children: _selectedEvents
-          .map((event) => Container(
-        decoration: BoxDecoration(
-          border: Border.all(width: 0.8),
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        margin:
-        const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-        child: ListTile(
-          title: Text(event.toString()),
-          onTap: () => print('$event tapped!'),
-        ),
-      ))
-          .toList(),
+  Widget _buildEventList(BuildContext context) {
+    return Container(
+      child: ListView.builder(
+        itemCount: _selectedEvents.length,
+        itemBuilder: (context, index) {
+          return Dismissible(
+            background: Container(
+              alignment: AlignmentDirectional.centerEnd,
+              color: Colors.red,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                child: Icon(Icons.delete,
+                            color: Colors.white)
+              )
+            ),
+            key: Key(_selectedEvents[index]),
+            onDismissed: (direction) {
+              setState(() {
+                _selectedEvents.removeAt(index);
+              });
+            },
+            child: Container(
+              height: 80.0,
+              decoration: BoxDecoration(border: Border.all(width: 1.0)),
+              padding: EdgeInsets.all(5.0),
+              child: Row(
+                children: <Widget>[
+                  Text(
+                    _eventHashes[_selectedEvents[index]].getEventDesc(),
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20.0
+                    )
+                  ),
+                  Text(
+                    _eventHashes[_selectedEvents[index]].getEventTime(),
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontSize: 15.0
+                    )
+                  ),
+                  Text(
+                    _eventHashes[_selectedEvents[index]].getFriend(),
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontSize: 15.0
+                    )
+                  )
+                ]
+              )
+            )
+          );
+        }
+      )
     );
   }
 }
